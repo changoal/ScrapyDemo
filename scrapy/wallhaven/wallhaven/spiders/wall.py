@@ -4,6 +4,7 @@ from scrapy import Request
 from bs4 import BeautifulSoup
 import re
 from wallhaven.items import WallhavenItem
+import pymongo
 
 
 class WallSpider(scrapy.Spider):
@@ -14,6 +15,8 @@ class WallSpider(scrapy.Spider):
         for i in range(1, 14445)
     ]
 
+    collection = pymongo.MongoClient('localhost', 27017)['wallhaven']['wall']
+
     def parse(self, response):
         soup = BeautifulSoup(response.text, 'lxml')
         section_soup = soup.find('section', class_='thumb-listing-page')
@@ -23,6 +26,7 @@ class WallSpider(scrapy.Spider):
                 lis = ul_soup.find_all('li')
                 for li in lis:
                     a_soup = li.find('a', class_='preview')['href']
+                    img_id = a_soup.split('/')[-1]
                     yield Request(a_soup, callback=self.parse_image)
             else:
                 print("not found ul")
